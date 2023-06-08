@@ -2,6 +2,7 @@
 #include <FastLED.h>
 #include "LedControl.h"
 
+const char* CONNECT_STRING = "Hello from Arduino!";
 const uint8_t CMD_BUFFER_SIZE = 5;
 uint8_t cmd[CMD_BUFFER_SIZE];
 
@@ -16,7 +17,7 @@ void setup()
    LED_init();
    Serial.begin(9600);
    delay(200);
-   Serial.print("Hello from Arduino!");
+   Serial.print(CONNECT_STRING);
 }
 
 void loop() 

@@ -2,22 +2,30 @@ package lightstrip_control_ui;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
+import java.util.Arrays;
 
 import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortDataListener;
+import com.fazecast.jSerialComm.SerialPortEvent;
 
 public class ButtonMethods {
 	
 	private static enum SerialStatus {
 		SUCCESS,
-		NO_SEND,
+		NO_TX,
+		NO_RX,
 		PORT_NOT_OPEN,
-		PORT_NOT_CLOSED
+		PORT_NOT_CLOSED,
+		DEVICE_NOT_FOUND
 	}
 
 	private static final int BAUD_RATE = 9600;
 	private static final byte CHANGE_COLOR = 0;
 	private static final byte LED_ON = 1;
 	private static final byte LED_OFF = 2;
+	private static byte[] CONNECT_MSG = "Hello from Arduino!".getBytes();
+	private static Semaphore serialSem = new Semaphore(0);
 	
 	// Expand upon this for other Arduino names
 	private static final String[] ARDUINO_DEVICE_NAMES = { "USB-SERIAL CH340" };
@@ -70,24 +78,56 @@ public class ButtonMethods {
 		return toReturn;
 	}
 	
-	private static SerialStatus sendCommand(final byte command, final SerialPort port, final String deviceName, final Color toChange, final byte brightness) {
-		if (port.openPort()) {			
+	private static SerialStatus sendCommand(final byte command, final SerialPort port, final String deviceName, final Color toChange, final byte brightness) {	
+		SerialPortDataListener portListner = new SerialPortDataListener() {
+
+			@Override
+			public int getListeningEvents() { 
+				return SerialPort.LISTENING_EVENT_DATA_RECEIVED; 
+			}
+
+			@Override
+			public void serialEvent(SerialPortEvent event) {
+				if (event.getSerialPort().toString().contentEquals(port.toString())) {
+					byte[] received = event.getReceivedData();
+					if (Arrays.equals(received, CONNECT_MSG)) {
+						serialSem.release();
+					}
+				}
+			}
+			
+		};
+		
+		if (port.openPort()) {
+			port.addDataListener(portListner);
+			
+			try {
+				serialSem.acquire(); // to do: make this time out
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			byte cmdToSend[] = { command, (byte)toChange.getRed(), (byte)toChange.getBlue(), (byte)toChange.getGreen(), brightness };
 //			System.out.printf("Sending values: %d, %d, %d, %d, %d \n", CHANGE_COLOR, (byte)newColor.getRed(), (byte)newColor.getBlue(), (byte)newColor.getGreen(), 50);
 			
 			if (port.writeBytes(cmdToSend, 5) == -1) {
-				return SerialStatus.NO_SEND;
+				port.removeDataListener();
+				return SerialStatus.NO_TX;
 			}
 		} else {
 			System.out.println("Unable to open port on " + deviceName);
+			port.removeDataListener();
 			return SerialStatus.PORT_NOT_OPEN;
 		}
 		
 		if (port.closePort() == false) {
 			System.out.println("Unable to close port on " + deviceName);
+			port.removeDataListener();
 			return SerialStatus.PORT_NOT_CLOSED;
 		}
 		
+		port.removeDataListener();
 		return SerialStatus.SUCCESS;
 	}
 	
