@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <FastLED.h>
 
 #include "LedControl.h"
@@ -44,13 +45,15 @@ void LED_changeColor(uint8_t newR, uint8_t newG, uint8_t newB, uint8_t newBright
 
 void LED_ledsOn(void)
 {
+   FastLED.clear();
+   updateAllLeds(r, g, b);
    FastLED.setBrightness(brightness);
    FastLED.show();
 }
 
 void LED_ledsOff(void)
 {
-   FastLED.setBrightness(0);
+   FastLED.clear();
    FastLED.show();
 }
 

@@ -112,7 +112,7 @@ public class ButtonMethods {
 			}
 			
 			byte cmdToSend[] = { command, (byte)toChange.getRed(), (byte)toChange.getGreen(), (byte)toChange.getBlue(), brightness };
-			System.out.printf("Sending values: %d, %d, %d, %d, %d \n", CHANGE_COLOR, toChange.getRed(), toChange.getGreen(), toChange.getBlue(), 50);
+			System.out.printf("Sending values: %d, %d, %d, %d, %d \n", command, toChange.getRed(), toChange.getGreen(), toChange.getBlue(), 50);
 			
 			if (port.writeBytes(cmdToSend, 5) == -1) {
 				port.removeDataListener();
