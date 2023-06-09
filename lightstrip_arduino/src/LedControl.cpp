@@ -1,12 +1,11 @@
 #include <Arduino.h>
-#include <EEPROM.h>
 #include <FastLED.h>
 
 #include "LedControl.h"
+#include "LedStorage.h"
 
 const uint8_t NUM_LEDS = 29;
 const uint8_t DATA_PIN = 2;
-// const uint8_t CALIBRATE_LEDS = 7;
 
 static CRGB leds[NUM_LEDS];
 static uint8_t r, g, b, brightness;
@@ -16,11 +15,10 @@ static void updateAllLeds(CRGB::HTMLColorCode newColor);
 
 void LED_init(void)
 {
-   // replace with EEPROM values once its implemented
-   r = 0;
-   g = 0;
-   b = 0;
-   brightness = 50;
+   r = Storage_getEepromRed();
+   g = Storage_getEepromGreen();
+   b = Storage_getEepromBlue();
+   brightness = Storage_getEepromBrightness();
 
    // Current lightstrip uses GRB ordering
    FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, NUM_LEDS);
@@ -37,10 +35,16 @@ void LED_changeColor(uint8_t newR, uint8_t newG, uint8_t newB, uint8_t newBright
    updateAllLeds(newR, newG, newB);
    FastLED.setBrightness(newBrightness);
    FastLED.show();
-   r = newR;
-   g = newG;
-   b = newB;
-   brightness = newBrightness;
+
+   Storage_updateEepromRed(newR);
+   Storage_updateEepromGreen(newG);
+   Storage_updateEepromBlue(newB);
+   Storage_updateEepromBrightness(newBrightness);
+
+   // r = newR;
+   // g = newG;
+   // b = newB;
+   // brightness = newBrightness;
 }
 
 void LED_ledsOn(void)
@@ -61,13 +65,11 @@ void LED_debugFlash(uint8_t timesToFlash, uint8_t delayMs, CRGB::HTMLColorCode h
 {
    for (uint8_t i = 0; i < timesToFlash; i++) {
       FastLED.clear();
-      // updateAllLeds(255, 0, 0);
       updateAllLeds(hexColorCode);
       FastLED.show();
       delay(delayMs);
 
       FastLED.clear();
-      // updateAllLeds(0, 0, 0);
       updateAllLeds(CRGB::HTMLColorCode::Black);
       FastLED.show();
       delay(delayMs);
