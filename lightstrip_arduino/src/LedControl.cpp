@@ -5,22 +5,28 @@
 
 const uint8_t NUM_LEDS = 29;
 const uint8_t DATA_PIN = 2;
-const uint8_t CALIBRATE_LEDS = 7;
+// const uint8_t CALIBRATE_LEDS = 7;
 
 static CRGB leds[NUM_LEDS];
 static uint8_t r, g, b, brightness;
 
 static void updateAllLeds(uint8_t newR, uint8_t newG, uint8_t newB);
-static void updateAllLeds(CRGB newColor);
+static void updateAllLeds(CRGB::HTMLColorCode newColor);
 
 void LED_init(void)
 {
+   // replace with EEPROM values once its implemented
+   r = 0;
+   g = 0;
+   b = 0;
+   brightness = 50;
+
    // Current lightstrip uses GRB ordering
    FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, NUM_LEDS);
    for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = CRGB(CRGB::HTMLColorCode::White);
+      leds[i] = CRGB(r, g, b);
    }
-   FastLED.setBrightness(10);
+   FastLED.setBrightness(brightness);
    FastLED.show();
 }
 
@@ -48,18 +54,18 @@ void LED_ledsOff(void)
    FastLED.show();
 }
 
-void LED_debugErrFlash(uint8_t timesToFlash, uint8_t delayMs, CRGB color)
+void LED_debugFlash(uint8_t timesToFlash, uint8_t delayMs, CRGB::HTMLColorCode hexColorCode)
 {
    for (uint8_t i = 0; i < timesToFlash; i++) {
       FastLED.clear();
       // updateAllLeds(255, 0, 0);
-      updateAllLeds(color);
+      updateAllLeds(hexColorCode);
       FastLED.show();
       delay(delayMs);
 
       FastLED.clear();
       // updateAllLeds(0, 0, 0);
-      updateAllLeds(CRGB(CRGB::HTMLColorCode::Black));
+      updateAllLeds(CRGB::HTMLColorCode::Black);
       FastLED.show();
       delay(delayMs);
    }
@@ -76,9 +82,9 @@ static void updateAllLeds(uint8_t newR, uint8_t newG, uint8_t newB)
    }
 }
 
-static void updateAllLeds(CRGB newColor)
+static void updateAllLeds(CRGB::HTMLColorCode newColor)
 {
    for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = newColor;
+      leds[i] = CRGB(newColor);
    }
 }

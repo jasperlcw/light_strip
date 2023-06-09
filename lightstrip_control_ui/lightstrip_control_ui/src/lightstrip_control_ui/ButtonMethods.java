@@ -88,9 +88,12 @@ public class ButtonMethods {
 
 			@Override
 			public void serialEvent(SerialPortEvent event) {
+				byte[] received = event.getReceivedData();
+//				System.out.print("From Arduino: ");
+//				System.out.println(received);
 				if (event.getSerialPort().toString().contentEquals(port.toString())) {
-					byte[] received = event.getReceivedData();
 					if (Arrays.equals(received, CONNECT_MSG)) {
+						System.out.println("Got the connect message from Arduino!");
 						serialSem.release();
 					}
 				}
@@ -108,8 +111,8 @@ public class ButtonMethods {
 				e.printStackTrace();
 			}
 			
-			byte cmdToSend[] = { command, (byte)toChange.getRed(), (byte)toChange.getBlue(), (byte)toChange.getGreen(), brightness };
-//			System.out.printf("Sending values: %d, %d, %d, %d, %d \n", CHANGE_COLOR, (byte)newColor.getRed(), (byte)newColor.getBlue(), (byte)newColor.getGreen(), 50);
+			byte cmdToSend[] = { command, (byte)toChange.getRed(), (byte)toChange.getGreen(), (byte)toChange.getBlue(), brightness };
+			System.out.printf("Sending values: %d, %d, %d, %d, %d \n", CHANGE_COLOR, toChange.getRed(), toChange.getGreen(), toChange.getBlue(), 50);
 			
 			if (port.writeBytes(cmdToSend, 5) == -1) {
 				port.removeDataListener();
